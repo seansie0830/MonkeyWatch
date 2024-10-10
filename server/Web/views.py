@@ -6,20 +6,22 @@ from .models import *
 from .serializers import GroupedWeeklyTaskSerializer, WeeklyTaskSerializer, CompletionStatusSerializer
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse , HttpResponse
+import datetime  # 引入 datetime 模組
 
-import json
+
+def imageupload(request):
+    image_file = request.FILES.get('image')
+    instance =Image(image=image_file )
+    instance.save()
 
 def imageshow(request,imageid):
     obj = get_object_or_404(Image, pk=imageid)
     image_file = obj.image.open()  # 開啟 ImageField 檔案
     response = HttpResponse(image_file.read(), content_type="image/jpeg")  # 或其他圖片類型
     return response
-
-def monkeyEventShow(request):
-    if(request.GET.get("date") == None) :
-        events= MonkeyDetectionEvent.objects.all()
-        event_list = []
-        for event in events:
+def serialize_events(events):
+    event_list = []
+    for event in events:
             event_data = {
                 'id': event.id,
                 'image_id': event.image.id,  # Include the related image ID
@@ -30,7 +32,22 @@ def monkeyEventShow(request):
                 'mark': event.mark,
             }
             event_list.append(event_data)
+    return event_list
+
+def monkeyEventShow(request):
+    if(request.GET.get("date") == None) :
+        events= MonkeyDetectionEvent.objects.all()
+        event_list=serialize_events(events)
         return JsonResponse(event_list, safe=False)
+    else:
+        try:
+            date_str = request.GET.get("date")
+            date_obj = datetime.datetime.strptime(date_str, '%Y-%m-%d').date()
+            events = MonkeyDetectionEvent.objects.filter(timestamp__date=date_obj)
+            event_list=serialize_events(events)
+            return JsonResponse(event_list, safe=False)
+        except ValueError:
+            return JsonResponse({'error': 'Invalid date format. Please use YYYY-MM-DD.'}, status=400)
 # List all WeeklyTasks
 class WeeklyTaskView(APIView):
     def get(self, request):
