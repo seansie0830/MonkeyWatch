@@ -12,6 +12,7 @@ class Image(models.Model):
 
 
 
+
 class MonkeyDetectionEvent(models.Model):
     image = models.ForeignKey(Image, on_delete=models.CASCADE, related_name='events')  # 與 Image 模型建立關聯
     timestamp = models.DateTimeField(auto_now_add=True)
