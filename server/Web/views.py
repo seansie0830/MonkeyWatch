@@ -5,8 +5,10 @@ from rest_framework.generics import ListAPIView, UpdateAPIView
 from .models import *
 from .serializers import GroupedWeeklyTaskSerializer, WeeklyTaskSerializer, CompletionStatusSerializer
 from django.shortcuts import get_object_or_404
-import json
 from django.http import JsonResponse
+
+import json
+
 
 def monkeyEventShow(request):
     if(request.GET.get("date") == None) :
@@ -22,10 +24,8 @@ def monkeyEventShow(request):
                 'verdict': event.verdict,
                 'mark': event.mark,
             }
-        event_list.append(event_data)
+            event_list.append(event_data)
         return JsonResponse(event_list, safe=False)
-    else :
-        pass
 # List all WeeklyTasks
 class WeeklyTaskView(APIView):
     def get(self, request):
