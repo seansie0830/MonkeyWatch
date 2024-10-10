@@ -1,7 +1,11 @@
 from collections import defaultdict
 from rest_framework import serializers
-from .models import WeeklyTask, DailyTask, CompletionStatus
+from .models import *
 
+class MonkeyDetectionEventSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MonkeyDetectionEvent
+        fields = '__all__'  # 或指定你需要的欄位
 
 class CompletionStatusSerializer(serializers.ModelSerializer):
     class Meta:

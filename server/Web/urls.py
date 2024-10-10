@@ -11,5 +11,7 @@ urlpatterns = [
     path('tasks/<int:pk>/complete/', views.TaskCompletionUpdateView.as_view(), name='task-complete-update'),
 	path('api/detection_results/', views.monkeyEventShow ,name="monkeyEventShow"),
 	path('api/detection_results/image/<int:imageid>' ,views.imageshow ,name= "imageshow"),
-	path('api/upload_image',views.imageupload ,name='imageupload')
+	path('api/upload_image',views.imageupload ,name='imageupload'),
+	path('api/history/', views.history, name='history'),
+	path('api/debugUpload', views.post ,name='post'),   # ! would be removed in productive enviroment
 ]

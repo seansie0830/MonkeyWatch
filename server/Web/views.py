@@ -7,12 +7,31 @@ from .serializers import GroupedWeeklyTaskSerializer, WeeklyTaskSerializer, Comp
 from django.shortcuts import get_object_or_404
 from django.http import JsonResponse , HttpResponse
 import datetime  # 引入 datetime 模組
+from django.views.decorators.csrf import csrf_exempt
+from rest_framework.decorators import api_view
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework import status
+from .serializers import MonkeyDetectionEventSerializer
+
+@csrf_exempt
+@api_view(['POST'])
+def post(request, format=None):
+    if request.method == 'POST':
+        serializer = MonkeyDetectionEventSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST) 
 
 
+
+@csrf_exempt
 def imageupload(request):
     image_file = request.FILES.get('image')
     instance =Image(image=image_file )
     instance.save()
+    return HttpResponse()
 
 def imageshow(request,imageid):
     obj = get_object_or_404(Image, pk=imageid)
@@ -48,6 +67,39 @@ def monkeyEventShow(request):
             return JsonResponse(event_list, safe=False)
         except ValueError:
             return JsonResponse({'error': 'Invalid date format. Please use YYYY-MM-DD.'}, status=400)
+        
+
+from django.shortcuts import render
+from django.http import JsonResponse
+from .models import MonkeyDetectionEvent
+from django.db.models import Q
+
+def history(request):
+    """
+    API endpoint for filtering MonkeyDetectionEvent objects based on query parameters.
+    """
+    try:
+        # Get all query parameters
+        query_params = request.GET.dict()
+
+        # Build filter conditions
+        filter_kwargs = {}
+        for key, value in query_params.items():
+            # Add __icontains for string fields for partial matching
+            if isinstance(getattr(MonkeyDetectionEvent, key.split('__')[0], None), str):
+                key += '__icontains'  
+            filter_kwargs[key] = value
+
+        # Filter events
+        events = MonkeyDetectionEvent.objects.filter(**filter_kwargs)
+
+        # Serialize the events
+        event_list = serialize_events(events) 
+
+        return JsonResponse(event_list, safe=False)
+
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=400)
 # List all WeeklyTasks
 class WeeklyTaskView(APIView):
     def get(self, request):
