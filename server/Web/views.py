@@ -5,10 +5,15 @@ from rest_framework.generics import ListAPIView, UpdateAPIView
 from .models import *
 from .serializers import GroupedWeeklyTaskSerializer, WeeklyTaskSerializer, CompletionStatusSerializer
 from django.shortcuts import get_object_or_404
-from django.http import JsonResponse
+from django.http import JsonResponse , HttpResponse
 
 import json
 
+def imageshow(request,imageid):
+    obj = get_object_or_404(Image, pk=imageid)
+    image_file = obj.image.open()  # 開啟 ImageField 檔案
+    response = HttpResponse(image_file.read(), content_type="image/jpeg")  # 或其他圖片類型
+    return response
 
 def monkeyEventShow(request):
     if(request.GET.get("date") == None) :
