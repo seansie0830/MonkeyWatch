@@ -14,4 +14,5 @@ urlpatterns = [
 	path('api/upload_image',views.imageupload ,name='imageupload'),
 	path('api/history/', views.history, name='history'),
 	path('api/debugUpload', views.post ,name='post'),   # ! would be removed in productive enviroment
+	path('upload_hls/', views.upload_hls_segment, name='upload_hls_segment'),
 ]

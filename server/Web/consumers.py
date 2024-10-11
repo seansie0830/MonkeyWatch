@@ -2,8 +2,41 @@ import json
 from asgiref.sync import async_to_sync
 from channels.generic.websocket import WebsocketConsumer
 from rich.console import Console
+import asyncio
+import os
+from channels.generic.websocket import AsyncWebsocketConsumer
+
 
 console = Console()
+
+
+class LiveStreamConsumer(AsyncWebsocketConsumer):
+    async def connect(self):
+        await self.accept()
+        
+        # 取得 HLS 檔案路徑
+        BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        hls_file = os.path.join(BASE_DIR, 'hls', '19203683-uhd_3840_2160_60fps.m3u8')  
+
+        # 讀取 m3u8 檔案
+        with open(hls_file, 'r') as f:
+            lines = f.readlines()
+
+        # 提取 .ts 檔案列表
+        ts_files = [line.strip() for line in lines if line.strip().endswith('.ts')]
+
+        # 模擬直播：循環發送 ts 檔案內容
+        while True:
+            for ts_file in ts_files:
+                ts_path = os.path.join(BASE_DIR, 'hls', ts_file)
+                with open(ts_path, 'rb') as f:
+                    while True:
+                        chunk = f.read(4096)  # 調整每次發送的 chunk 大小
+                        if not chunk:
+                            break
+                        await self.send(bytes_data=chunk)
+                        await asyncio.sleep(0.1)  # 調整發送頻率
+            await asyncio.sleep(1)  # 等待一段时间，模擬直播延遲
 
 class ChatConsumer(WebsocketConsumer):
     def connect(self):

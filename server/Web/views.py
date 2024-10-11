@@ -1,3 +1,4 @@
+import time  # 加入這一行
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
@@ -14,6 +15,32 @@ from rest_framework.response import Response
 from rest_framework import status
 from .serializers import MonkeyDetectionEventSerializer
 
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+import os
+
+@api_view(['POST'])
+@csrf_exempt
+def upload_hls_segment(request):
+  if request.method == 'POST':
+    # 從請求中取得 HLS 片段資料
+    segment_data = request.body
+
+    # 建立儲存 HLS 片段的目錄 (如果不存在)
+    media_root = 'media/hls'  # 替換成你的媒體檔案根目錄
+    os.makedirs(media_root, exist_ok=True)
+
+    # 產生唯一的檔案名稱
+    segment_filename = f'{os.path.join(media_root, "segment_" + str(int(time.time())))}.ts'  
+
+    # 將 HLS 片段儲存到檔案
+    with open(segment_filename, 'wb') as f:
+      f.write(segment_data)
+
+    return HttpResponse('HLS segment uploaded successfully.')
+  else:
+    return HttpResponse('Invalid request method.', status=405)
+
 @csrf_exempt
 @api_view(['POST'])
 def post(request, format=None):
@@ -26,12 +53,44 @@ def post(request, format=None):
 
 
 
+import json
+import random
+from django.http import HttpResponse
+from django.views.decorators.csrf import csrf_exempt
+
+def  get_detection_result_json(result, monkey_amount=None):  # 使用預設參數
+    """產生 JSON 格式的 detection result。"""
+    data = {
+        "detection_result": result
+    }
+    if monkey_amount is not None:  # 只在 monkey_amount 有值時才加入
+        data["monkey_amount"] = monkey_amount
+    return json.dumps(data)
+
 @csrf_exempt
 def imageupload(request):
     image_file = request.FILES.get('image')
-    instance =Image(image=image_file )
-    instance.save()
-    return HttpResponse()
+    
+    # 檢查是否有上傳圖片
+    if not image_file:
+        json_response = get_detection_result_json("image not upload")  # monkey_amount 使用預設值 None
+        return HttpResponse(json_response, content_type='application/json', status=400)  # Bad Request: 表示客户端请求有误
+
+    try:
+        instance = Image(image=image_file)
+        instance.save()
+
+        # 產生隨機的 monkey_amount 值
+        monkey_amount = random.randint(0, 10) 
+
+        # 產生 JSON 格式的 detection result
+        json_response = get_detection_result_json("結果", monkey_amount)
+
+        return HttpResponse(json_response, content_type='application/json') 
+
+    except Exception as e:  # 捕捉所有錯誤
+        error_response = json.dumps({"error": f"儲存圖片或產生 JSON 時發生錯誤：{str(e)}"})
+        return HttpResponse(error_response, content_type='application/json', status=500)  # Internal Server Error: 表示服务器端发生错误
 
 def imageshow(request,imageid):
     obj = get_object_or_404(Image, pk=imageid)
