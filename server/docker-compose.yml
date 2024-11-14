@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    environment:
+      MYSQL_DATABASE: django_db
+      MYSQL_ROOT_PASSWORD: your_mysql_root_password
+      MYSQL_USER: django
+      MYSQL_PASSWORD: your_django_password
+    networks:
+      django-network:
+        aliases:
+          - mysql  # Add the alias here
+
+  django:
+    image: django:latest
+    container_name: django
+    ports:
+      - "8000:8000"
+    depends_on:
+      - mysql
+    networks:
+      - django-network
+    command: ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+networks:
+  django-network:
+    driver: bridge

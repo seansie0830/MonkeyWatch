@@ -1,0 +1,18 @@
+{
+	"name": "Django Dev Container",
+	"dockerComposeFile": "../docker-compose.yml",
+	"service": "web",
+	"workspaceFolder": "/app",
+	"settings": {
+	  "python.pythonPath": "/usr/local/bin/python"
+	},
+	"extensions": [
+	  "ms-python.python"
+	],
+	"mounts": [
+	  "source=${localWorkspaceFolder}/mnt,target=/app/mnt,type=bind,consistency=cached"
+	],
+	"features": {
+	  "docker-in-docker": "latest" 
+	}
+  }
